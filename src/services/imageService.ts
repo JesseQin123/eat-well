@@ -13,39 +13,53 @@ export const generateRecipeImage = async (recipe: Recipe): Promise<GeneratedImag
     // 构建图片生成的提示词
     const prompt = buildImagePrompt(recipe)
 
-    const sizeToUse = { width: 1152, height: 896 }
-
     try {
-        const response = await fetch(config.baseUrl, {
+        // OpenRouter 的 Gemini 图片生成使用 chat completions 格式
+        const response = await fetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${config.apiKey}`
+                Authorization: `Bearer ${config.apiKey}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Eat Well App'
             },
             body: JSON.stringify({
                 model: config.model,
-                prompt: prompt,
-                size: `${sizeToUse.width}x${sizeToUse.height}`,
-                n: 1,
-                style: 'vivid',
-                quality: 'hd'
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                modalities: ['image', 'text'],
+                max_tokens: 500
             })
         })
 
         if (!response.ok) {
-            throw new Error(`API请求失败: ${response.status}`)
+            const errorText = await response.text()
+            throw new Error(`API请求失败: ${response.status} - ${errorText}`)
         }
 
         const data = await response.json()
 
-        if (data.data && data.data.length > 0) {
-            return {
-                url: data.data[0].url,
-                id: `${recipe.id}-${Date.now()}`
+        // OpenRouter Gemini 格式: choices[0].message.images[0].image_url.url
+        if (data.choices && data.choices.length > 0 && data.choices[0].message?.images?.length > 0) {
+            const imageUrl = data.choices[0].message.images[0].image_url?.url
+            if (imageUrl) {
+                return {
+                    url: imageUrl,
+                    id: `${recipe.id}-${Date.now()}`
+                }
             }
-        } else {
-            throw new Error('API返回数据格式错误')
         }
+
+        // 如果没有图片但有文字响应，记录日志
+        if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
+            console.log('AI响应文字:', data.choices[0].message.content)
+        }
+
+        throw new Error('API返回数据中未找到图片')
     } catch (error) {
         console.error('生成图片失败:', error)
         throw error
