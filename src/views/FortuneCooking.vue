@@ -1,40 +1,38 @@
 <template>
-    <div class="min-h-screen bg-yellow-400 px-2 md:px-4 py-6">
-        <!-- 全局导航 -->
-        <GlobalNavigation />
+    <div class="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
+        <div class="max-w-2xl mx-auto px-4">
+            <!-- 简化的页面标题 -->
+            <div class="pt-6 pb-4">
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                    玄学厨房 🔮
+                </h1>
+                <p class="text-sm text-gray-600">
+                    星辰指引美食，占卜预见美味
+                </p>
+            </div>
 
-        <div class="max-w-7xl mx-auto">
-            <!-- 页面标题和占卜师 -->
-            <!-- <div class="text-center mb-8">
-                <div class="relative">
-                    <div class="relative bg-white/90 backdrop-blur-sm border-2 border-purple-400 rounded-2xl p-6 mb-6">
-                        <div class="text-6xl mb-4 animate-pulse">🔮</div>
-                        <h1 class="text-4xl md:text-5xl font-bold text-purple-600 mb-4">料理占卜师</h1>
-
-                        <div class="text-sm text-purple-600 italic">"{{ currentMysticalWord }}"</div>
-                    </div>
-                </div>
-            </div> -->
-
-            <!-- 占卜类型选择 -->
+            <!-- 占卜类型选择 - 紧凑布局 -->
             <div class="mb-4">
-                <div class="bg-purple-500 text-white px-4 py-2 rounded-t-lg border-2 border-[#0A0910] border-b-0 inline-block">
-                    <span class="font-bold">1.选择占卜类型</span>
-                </div>
-                <div class="bg-white border-2 border-[#0A0910] rounded-lg rounded-tl-none p-4 md:p-6">
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="card-brutal p-4 bg-white">
+                    <h2 class="text-base font-bold text-gray-800 mb-3">选择占卜类型</h2>
+
+                    <div class="space-y-2">
                         <button
                             v-for="type in fortuneTypes"
                             :key="type.id"
                             @click="selectFortuneType(type.id)"
                             :class="[
-                                'p-6 rounded-xl border-2 border-[#0A0910] transition-all duration-300 transform hover:scale-105',
-                                selectedType === type.id ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                'w-full p-3 rounded-lg border-2 border-black transition-all text-left flex items-center gap-3',
+                                selectedType === type.id
+                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-brutal-sm'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 active:scale-95'
                             ]"
                         >
-                            <div class="text-3xl mb-3">{{ type.icon }}</div>
-                            <div class="font-bold text-lg mb-2">{{ type.name }}</div>
-                            <div class="text-sm opacity-80">{{ type.description }}</div>
+                            <span class="text-2xl">{{ type.icon }}</span>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm">{{ type.name }}</div>
+                                <div class="text-xs opacity-80">{{ type.description }}</div>
+                            </div>
                         </button>
                     </div>
                 </div>
@@ -42,10 +40,7 @@
 
             <!-- 占卜参数配置区域 -->
             <div v-if="selectedType" class="mb-4">
-                <div class="bg-indigo-500 text-white px-4 py-2 rounded-t-lg border-2 border-[#0A0910] border-b-0 inline-block">
-                    <span class="font-bold">2.配置占卜参数</span>
-                </div>
-                <div class="bg-white border-2 border-[#0A0910] rounded-lg rounded-tl-none p-4 md:p-6">
+                <div class="card-brutal p-4 bg-white">
                     <!-- 今日运势配置 -->
                     <div v-if="selectedType === 'daily'" class="space-y-6 mb-4">
                         <div class="grid md:grid-cols-2 gap-6">
@@ -163,17 +158,12 @@
 
             <!-- 占卜结果展示 -->
             <div v-if="fortuneResult" class="mb-8" data-fortune-result>
-                <div class="bg-pink-500 text-white px-4 py-2 rounded-t-lg border-2 border-[#0A0910] border-b-0 inline-block">
-                    <span class="font-bold">3.占卜结果</span>
-                </div>
-                <div class="bg-white border-2 border-[#0A0910] rounded-lg rounded-tl-none p-4 md:p-6">
-                    <FortuneCard class="max-w-2xl mx-auto" :fortune="fortuneResult" :show-actions="true" />
+                <div class="card-brutal p-4 bg-white">
+                    <h2 class="text-base font-bold text-gray-800 mb-4">占卜结果</h2>
+                    <FortuneCard :fortune="fortuneResult" :show-actions="true" />
                 </div>
             </div>
         </div>
-
-        <!-- 全局底部 -->
-        <GlobalFooter />
     </div>
 </template>
 
@@ -183,8 +173,6 @@ import { generateDailyFortune, generateMoodCooking, generateNumberFortune } from
 import type { FortuneType, FortuneResult, DailyFortuneParams, MoodFortuneParams, NumberFortuneParams } from '@/types'
 import { zodiacConfigs, animalConfigs, moodConfigs, fortuneTeller, getRandomGreeting, getRandomMysticalWord } from '@/config/fortune'
 import FortuneCard from '@/components/FortuneCard.vue'
-import GlobalNavigation from '@/components/GlobalNavigation.vue'
-import GlobalFooter from '@/components/GlobalFooter.vue'
 
 // 占卜类型配置
 const fortuneTypes = [

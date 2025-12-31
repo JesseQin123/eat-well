@@ -27,7 +27,7 @@ const route = useRoute()
 
 // Show bottom nav on main pages only
 const showBottomNav = computed(() => {
-  const mainPaths = ['/', '/today-eat', '/table-design', '/favorites']
+  const mainPaths = ['/', '/fortune-cooking', '/table-design', '/favorites']
   return mainPaths.includes(route.path)
 })
 </script>
