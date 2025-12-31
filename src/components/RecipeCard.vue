@@ -50,12 +50,7 @@
 
             <!-- 制作步骤预览 -->
             <div class="mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="text-sm font-bold text-dark-800 flex items-center gap-1">📝 制作步骤</h4>
-                    <button @click="toggleExpanded" class="bg-gray-100 hover:bg-gray-200 text-dark-800 text-xs px-2 py-1 rounded border border-black transition-colors">
-                        {{ isExpanded ? '收起' : '展开' }}
-                    </button>
-                </div>
+                <h4 class="text-sm font-bold text-dark-800 mb-2 flex items-center gap-1">📝 制作步骤</h4>
 
                 <!-- 简化步骤预览 -->
                 <div v-if="!isExpanded" class="space-y-2">
@@ -65,9 +60,14 @@
                         </div>
                         <p class="text-dark-700 text-xs line-clamp-2">{{ step.description }}</p>
                     </div>
-                    <div v-if="recipe.steps.length > 3" class="text-center py-1">
-                        <span class="text-gray-500 text-xs">还有 {{ recipe.steps.length - 3 }} 个步骤...</span>
-                    </div>
+                    <!-- 展开按钮 -->
+                    <button
+                        v-if="recipe.steps.length > 3"
+                        @click="toggleExpanded"
+                        class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-dark-800 text-xs font-medium rounded border border-black transition-all active:scale-95"
+                    >
+                        还有 {{ recipe.steps.length - 3 }} 个步骤，点击展开 👇
+                    </button>
                 </div>
 
                 <!-- 完整步骤 -->
@@ -84,6 +84,13 @@
                             </div>
                         </div>
                     </div>
+                    <!-- 收起按钮 -->
+                    <button
+                        @click="toggleExpanded"
+                        class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-dark-800 text-xs font-medium rounded border border-black transition-all active:scale-95"
+                    >
+                        收起步骤 👆
+                    </button>
                 </div>
             </div>
 
