@@ -12,6 +12,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 引入设计系统 */
+@import './styles/design-tokens.css';
+@import './styles/utilities.css';
+
 body {
     font-family: 'Noto Sans SC', sans-serif;
     background: #fbbf24;

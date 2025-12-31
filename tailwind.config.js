@@ -58,7 +58,38 @@ module.exports = {
                     700: '#44403c',
                     800: '#292524',
                     900: '#1c1917',
+                },
+                // 新增: Primary别名(引用CSS变量)
+                primary: {
+                    yellow: 'var(--color-yellow-400)',
+                    pink: 'var(--color-pink-400)',
+                    black: 'var(--color-black)',
+                },
+                // 新增: 语义色
+                semantic: {
+                    success: '#10B981',
+                    error: '#EF4444',
+                    warning: '#F59E0B',
+                    info: '#3B82F6',
                 }
+            },
+            // 新增: Brutal阴影
+            boxShadow: {
+                'brutal-sm': 'var(--shadow-brutal-sm)',
+                'brutal-md': 'var(--shadow-brutal-md)',
+                'brutal-lg': 'var(--shadow-brutal-lg)',
+                'brutal-xl': 'var(--shadow-brutal-xl)',
+            },
+            // 新增: 圆角(引用CSS变量)
+            borderRadius: {
+                'xl': 'var(--radius-xl)',
+                '2xl': 'var(--radius-2xl)',
+            },
+            // 新增: 动画时长
+            transitionDuration: {
+                'fast': 'var(--duration-fast)',
+                'normal': 'var(--duration-normal)',
+                'slow': 'var(--duration-slow)',
             }
         },
     },
