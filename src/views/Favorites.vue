@@ -171,9 +171,6 @@ const sortBy = ref('date-desc')
 const editingFavorite = ref<FavoriteRecipe | null>(null)
 const showClearConfirm = ref(false)
 
-// 统计信息
-const stats = computed(() => FavoriteService.getFavoriteStats())
-
 // 可用菜系列表
 const availableCuisines = computed(() => {
     const cuisines = new Set(favorites.value.map(fav => fav.recipe.cuisine))

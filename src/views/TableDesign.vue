@@ -359,6 +359,7 @@ import { generateTableMenu, generateDishRecipe } from '@/services/aiService'
 // 配置选项
 interface TableConfig {
     dishCount: number
+    flexibleCount: boolean
     tastes: string[]
     cuisineStyle: string
     diningScene: string
@@ -386,6 +387,7 @@ const selectedRecipe = ref<Recipe | null>(null)
 // 配置
 const config = reactive<TableConfig>({
     dishCount: 6,
+    flexibleCount: false,
     tastes: [],
     cuisineStyle: 'mixed',
     diningScene: 'family',
