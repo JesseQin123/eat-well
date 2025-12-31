@@ -56,13 +56,13 @@ const show = ref(false)
 const NOTICE_KEY = 'global-notice-dismissed'
 
 onMounted(() => {
-    const dismissed = localStorage.getItem(NOTICE_KEY)
-    if (dismissed !== 'permanent') {
-        // 延迟显示，让页面先加载
-        setTimeout(() => {
-            show.value = true
-        }, 500)
-    }
+    // 禁用全局通知弹窗
+    // const dismissed = localStorage.getItem(NOTICE_KEY)
+    // if (dismissed !== 'permanent') {
+    //     setTimeout(() => {
+    //         show.value = true
+    //     }, 500)
+    // }
 })
 
 const handleClose = (permanent: boolean) => {
