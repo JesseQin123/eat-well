@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black z-50 safe-area-bottom pb-[env(safe-area-inset-bottom)]"
+    class="bottom-tab-bar bg-white border-t-2 border-black z-50 safe-area-bottom pb-[env(safe-area-inset-bottom)]"
     role="navigation"
     aria-label="主导航"
   >

@@ -21,6 +21,66 @@ body {
     min-height: 100vh;
 }
 
+/* Desktop wrapper - shows dark background on desktop */
+.app-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+}
+
+/* App container - mobile-like experience */
+.app-container {
+    width: 100%;
+    max-width: 430px; /* iPhone 14 Pro Max width */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Bottom tab bar - fixed within container */
+.bottom-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+}
+
+/* Desktop styles - add visual separation */
+@media (min-width: 431px) {
+    body {
+        background: #1a1a1a;
+    }
+
+    .app-wrapper {
+        padding: 0;
+    }
+
+    .app-container {
+        background: #fbbf24;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Center all fixed elements within container on desktop */
+    .recipe-detail {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .recipe-detail-footer {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 430px;
+    }
+}
+
 /* 自定义动画 */
 @keyframes cooking {
 

@@ -130,7 +130,7 @@
     </div>
 
     <!-- Bottom action bar -->
-    <footer v-if="recipe" class="fixed bottom-20 md:bottom-0 left-0 right-0 bg-white border-t-2 border-black p-4 safe-area-bottom z-20">
+    <footer v-if="recipe" class="recipe-detail-footer fixed bottom-20 left-0 right-0 bg-white border-t-2 border-black p-4 safe-area-bottom z-20">
       <div class="max-w-4xl mx-auto flex gap-3">
         <FavoriteButton :recipe="recipe" class="flex-1" large />
         <button

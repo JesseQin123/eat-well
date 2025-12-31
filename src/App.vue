@@ -1,19 +1,21 @@
 <template>
-    <div id="app" class="min-h-screen">
-        <!-- Main content area - add bottom padding on mobile to avoid bottom nav overlap -->
-        <main class="pb-0 md:pb-0 min-h-screen" :class="{ 'pb-20': showBottomNav }">
-            <router-view v-slot="{ Component, route }">
-                <Transition :name="route.meta.transition || 'fade'" mode="out-in">
-                    <component :is="Component" :key="route.path" />
-                </Transition>
-            </router-view>
-        </main>
+    <div id="app-wrapper" class="app-wrapper">
+        <div id="app" class="app-container min-h-screen">
+            <!-- Main content area - add bottom padding to avoid bottom nav overlap -->
+            <main class="pb-0 min-h-screen" :class="{ 'pb-20': showBottomNav }">
+                <router-view v-slot="{ Component, route }">
+                    <Transition :name="route.meta.transition || 'fade'" mode="out-in">
+                        <component :is="Component" :key="route.path" />
+                    </Transition>
+                </router-view>
+            </main>
 
-        <!-- Bottom navigation - mobile only -->
-        <BottomTabBar v-if="showBottomNav" class="md:hidden" />
+            <!-- Bottom navigation - always visible -->
+            <BottomTabBar v-if="showBottomNav" />
 
-        <!-- <FloatingDonation /> -->
-        <GlobalNoticeModal />
+            <!-- <FloatingDonation /> -->
+            <GlobalNoticeModal />
+        </div>
     </div>
 </template>
 
