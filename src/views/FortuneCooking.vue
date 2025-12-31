@@ -82,26 +82,28 @@
                     </div>
 
                     <!-- 心情料理配置 -->
-                    <div v-if="selectedType === 'mood'" class="space-y-6">
+                    <div v-if="selectedType === 'mood'" class="space-y-4">
                         <div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">选择你的心情（可多选）</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <h3 class="text-sm font-bold text-gray-800 mb-2">选择你的心情（可多选）</h3>
+                            <div class="grid grid-cols-4 gap-2">
                                 <button
                                     v-for="mood in moodConfigs"
                                     :key="mood.id"
                                     @click="toggleMood(mood.id)"
                                     :class="[
-                                        'p-4 rounded-lg border-2 border-[#0A0910] transition-all duration-200',
-                                        moodParams.moods.includes(mood.id) ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        'p-2 rounded-lg border-2 border-black transition-all active:scale-95',
+                                        moodParams.moods.includes(mood.id)
+                                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-brutal-sm'
+                                            : 'bg-white text-gray-700 hover:bg-gray-50'
                                     ]"
                                 >
-                                    <div class="text-2xl mb-2">{{ mood.emoji }}</div>
-                                    <div class="font-medium text-sm">{{ mood.name }}</div>
+                                    <div class="text-xl mb-1">{{ mood.emoji }}</div>
+                                    <div class="font-medium text-xs">{{ mood.name }}</div>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">情绪强度：{{ intensityLabels[moodParams.intensity - 1] }}</h3>
+                            <h3 class="text-sm font-bold text-gray-800 mb-2">情绪强度：{{ intensityLabels[moodParams.intensity - 1] }}</h3>
                             <input
                                 v-model="moodParams.intensity"
                                 type="range"
@@ -113,37 +115,35 @@
                     </div>
 
                     <!-- 幸运数字配置 -->
-                    <div v-if="selectedType === 'number'" class="space-y-6">
-                        <div class="text-center">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">选择你的幸运数字</h3>
-                            <div class="flex items-center justify-center gap-4 mb-6">
-                                <input
-                                    v-model="numberParams.number"
-                                    type="number"
-                                    min="1"
-                                    max="99"
-                                    class="w-24 h-16 text-2xl font-bold text-center bg-white border-2 border-[#0A0910] rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                                />
-                                <button
-                                    @click="generateRandomNumber"
-                                    class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg font-bold hover:from-pink-600 hover:to-purple-600 transition-all duration-200 border-2 border-[#0A0910]"
-                                >
-                                    🎲 随机生成
-                                </button>
-                            </div>
+                    <div v-if="selectedType === 'number'">
+                        <h3 class="text-sm font-bold text-gray-800 mb-2">选择你的幸运数字</h3>
+                        <div class="flex items-center gap-2">
+                            <input
+                                v-model="numberParams.number"
+                                type="number"
+                                min="1"
+                                max="99"
+                                class="flex-1 px-3 py-2 text-lg font-bold text-center bg-white border-2 border-black rounded-lg text-gray-800 focus:outline-none focus:border-purple-500 transition-all"
+                            />
+                            <button
+                                @click="generateRandomNumber"
+                                class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg font-medium text-sm border-2 border-black hover:from-pink-600 hover:to-purple-600 active:scale-95 transition-all"
+                            >
+                                🎲 随机生成
+                            </button>
                         </div>
                     </div>
 
                     <!-- 开始占卜按钮 -->
-                    <div class="text-center pt-6 border-t border-gray-200">
+                    <div class="pt-4 border-t border-gray-200 mt-4">
                         <button
                             @click="startFortune"
                             :disabled="!canStartFortune || isLoading"
-                            class="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-bold text-lg rounded-lg border-2 border-[#0A0910] transition-all duration-300 transform disabled:scale-100 disabled:cursor-not-allowed shadow-lg"
+                            class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-bold text-sm rounded-xl border-2 border-black shadow-brutal-lg hover:shadow-brutal-md active:shadow-brutal-sm active:translate-x-[2px] active:translate-y-[2px] transition-all disabled:cursor-not-allowed disabled:hover:shadow-brutal-lg disabled:active:translate-x-0 disabled:active:translate-y-0"
                         >
-                            <span class="flex items-center gap-3 justify-center">
+                            <span class="flex items-center gap-2 justify-center">
                                 <template v-if="isLoading">
-                                    <div class="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div>
+                                    <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                                     <span>{{ currentProcessingText }}</span>
                                 </template>
                                 <template v-else>
