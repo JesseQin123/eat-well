@@ -118,6 +118,23 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Footer -->
+            <footer class="mt-8 px-4 pb-4">
+                <div class="text-center text-xs text-gray-500 leading-relaxed">
+                    <p>本项目基于开源项目开发</p>
+                    <p class="mt-1">
+                        感谢原作者的辛勤劳动
+                        <a
+                            href="https://github.com/liu-ziting/what-to-eat"
+                            target="_blank"
+                            class="text-blue-500 hover:text-blue-600 underline"
+                        >
+                            github.com/liu-ziting/what-to-eat
+                        </a>
+                    </p>
+                </div>
+            </footer>
         </div>
 
         <!-- 备注编辑弹窗 -->
