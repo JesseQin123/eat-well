@@ -20,12 +20,50 @@ const errorMessage = ref('')
 const selectedIngredients = ref<string[]>([])
 const currentIngredient = ref('')
 
-// 常用食材列表
-const commonIngredients = [
-  '猪肉', '鸡肉', '牛肉', '鸡蛋',
-  '青菜', '土豆', '西红柿', '豆腐',
-  '白菜', '胡萝卜', '洋葱', '大蒜'
+// 食材分类（肉类、蔬菜、主食）
+const activeCategory = ref('meat')
+
+const ingredientCategories = [
+  {
+    id: 'meat',
+    name: '肉类',
+    emoji: '🥩',
+    items: ['猪肉', '牛肉', '鸡肉', '鸭肉', '鱼肉', '虾', '蟹', '贝类']
+  },
+  {
+    id: 'vegetable',
+    name: '蔬菜',
+    emoji: '🥬',
+    items: ['青菜', '白菜', '土豆', '西红柿', '豆腐', '胡萝卜', '洋葱', '大蒜', '茄子', '黄瓜', '西兰花', '豆角']
+  },
+  {
+    id: 'staple',
+    name: '主食',
+    emoji: '🍚',
+    items: ['米饭', '面条', '馒头', '面包', '土豆', '红薯', '玉米', '意面']
+  }
 ]
+
+// 菜系选择（中国八大菜系 + 家常菜）
+const selectedCuisine = ref('home-cooking')
+
+const cuisineOptions = [
+  { id: 'home-cooking', name: '家常菜', emoji: '🍽️' },
+  { id: 'chuan', name: '川菜', emoji: '🌶️' },
+  { id: 'yue', name: '粤菜', emoji: '🦆' },
+  { id: 'lu', name: '鲁菜', emoji: '🐟' },
+  { id: 'su', name: '苏菜', emoji: '🦐' },
+  { id: 'zhe', name: '浙菜', emoji: '🐠' },
+  { id: 'xiang', name: '湘菜', emoji: '🔥' },
+  { id: 'min', name: '闽菜', emoji: '🦀' },
+  { id: 'hui', name: '徽菜', emoji: '🐷' }
+]
+
+// 计算当前分类的食材列表
+const currentIngredients = computed(() => {
+  const category = ingredientCategories.find(cat => cat.id === activeCategory.value)
+  return category?.items || []
+})
 
 // 处理筛选器变化
 const handleFilterChange = (filters: string[]) => {
@@ -62,15 +100,31 @@ const handleGenerateWithIngredients = async () => {
   errorMessage.value = ''
 
   try {
-    // 选择默认菜系（家常菜）
-    const cuisineType: CuisineType = cuisines.find((c: CuisineType) => c.id === 'home-cooking') || cuisines[0]
+    // 根据选择的菜系ID找到对应的菜系配置
+    let cuisineType: CuisineType
+
+    if (selectedCuisine.value === 'home-cooking') {
+      // 家常菜使用默认配置
+      cuisineType = cuisines.find((c: CuisineType) => c.id === 'chuan') || cuisines[0]
+    } else {
+      // 使用选择的菜系
+      cuisineType = cuisines.find((c: CuisineType) => c.id === selectedCuisine.value) || cuisines[0]
+    }
 
     // 构建自定义提示词
     let customPrompt = `使用这些食材: ${selectedIngredients.value.join('、')}`
 
+    // 添加菜系偏好
+    if (selectedCuisine.value === 'home-cooking') {
+      customPrompt += '\n要求：家常风味，简单易做'
+    } else {
+      const cuisineName = cuisineOptions.find(c => c.id === selectedCuisine.value)?.name
+      customPrompt += `\n要求：${cuisineName}风味`
+    }
+
     // 添加筛选条件
     if (activeFilters.value.length > 0) {
-      customPrompt += `\n要求：${activeFilters.value.join('、')}`
+      customPrompt += `，${activeFilters.value.join('、')}`
     }
 
     // 调用AI生成菜谱
@@ -145,55 +199,55 @@ const welcomeMessage = computed(() => {
     <FilterChips @change="handleFilterChange" />
 
     <!-- 欢迎消息 -->
-    <div v-if="!hasResults && !generating" class="px-4 pt-6 pb-4">
-      <h1 class="text-2xl font-bold text-gray-800 mb-2">
+    <div v-if="!hasResults && !generating" class="px-4 pt-4 pb-3">
+      <h1 class="text-xl font-bold text-gray-800 mb-1">
         {{ welcomeMessage }}
       </h1>
-      <p class="text-sm text-gray-600">
-        告诉我你有什么食材，AI 为你定制专属菜谱
+      <p class="text-xs text-gray-600">
+        选择食材 + 菜系，AI 为你定制专属菜谱
       </p>
     </div>
 
     <!-- 食材输入区域 - 核心功能 -->
-    <div v-if="!generating && !hasResults" class="px-4 py-6">
-      <div class="card-brutal p-6 bg-white">
+    <div v-if="!generating && !hasResults" class="px-4 pb-4">
+      <div class="card-brutal p-4 bg-white">
         <!-- 标题 -->
-        <div class="flex items-center gap-2 mb-4">
-          <span class="text-2xl">🥬</span>
-          <h2 class="text-lg font-bold text-gray-800">我有这些食材</h2>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">🥬</span>
+          <h2 class="text-base font-bold text-gray-800">我有这些食材</h2>
         </div>
 
-        <!-- 食材输入框 -->
-        <div class="mb-4">
+        <!-- 食材输入框 + 已选食材 -->
+        <div class="mb-3">
           <div class="flex gap-2">
             <input
               v-model="currentIngredient"
               @keyup.enter="addIngredient"
               type="text"
               placeholder="输入食材（如：猪肉、鸡蛋、青菜）"
-              class="flex-1 px-4 py-3 bg-gray-50 border-2 border-gray-300 rounded-lg text-base
+              class="flex-1 px-3 py-2 bg-gray-50 border-2 border-gray-300 rounded-lg text-sm
                      focus:outline-none focus:border-yellow-400 focus:bg-white transition-all"
             />
             <button
               @click="addIngredient"
-              class="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold rounded-lg
-                     border-2 border-black active:scale-95 transition-all"
+              class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold rounded-lg
+                     border-2 border-black active:scale-95 transition-all text-lg"
             >
               ➕
             </button>
           </div>
 
           <!-- 已添加的食材 -->
-          <div v-if="selectedIngredients.length > 0" class="mt-3 flex flex-wrap gap-2">
+          <div v-if="selectedIngredients.length > 0" class="mt-2 flex flex-wrap gap-1.5">
             <span
               v-for="(ingredient, index) in selectedIngredients"
               :key="index"
-              class="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-100 text-gray-800 rounded-full text-sm font-medium border-2 border-yellow-300"
+              class="inline-flex items-center gap-1 px-2.5 py-1 bg-yellow-100 text-gray-800 rounded-full text-xs font-medium border-2 border-yellow-300"
             >
               {{ ingredient }}
               <button
                 @click="removeIngredient(index)"
-                class="text-gray-600 hover:text-red-600 font-bold"
+                class="text-gray-600 hover:text-red-600 font-bold text-sm"
               >
                 ✕
               </button>
@@ -201,17 +255,38 @@ const welcomeMessage = computed(() => {
           </div>
         </div>
 
-        <!-- 常用食材快捷按钮 -->
-        <div class="mb-4">
-          <div class="text-xs text-gray-600 mb-2">常用食材：</div>
+        <!-- 食材分类Tab -->
+        <div class="mb-3">
+          <div class="flex gap-2 mb-2 border-b-2 border-gray-100">
+            <button
+              v-for="category in ingredientCategories"
+              :key="category.id"
+              @click="activeCategory = category.id"
+              :class="[
+                'px-3 py-2 text-sm font-medium transition-all relative',
+                activeCategory === category.id
+                  ? 'text-gray-800'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              <span class="mr-1">{{ category.emoji }}</span>
+              {{ category.name }}
+              <div
+                v-if="activeCategory === category.id"
+                class="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400"
+              ></div>
+            </button>
+          </div>
+
+          <!-- 当前分类的食材按钮 -->
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="ingredient in commonIngredients"
+              v-for="ingredient in currentIngredients"
               :key="ingredient"
               @click="quickAddIngredient(ingredient)"
               :disabled="selectedIngredients.includes(ingredient)"
               :class="[
-                'px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all',
+                'px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all',
                 selectedIngredients.includes(ingredient)
                   ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-yellow-400 active:scale-95'
@@ -222,19 +297,51 @@ const welcomeMessage = computed(() => {
           </div>
         </div>
 
+        <!-- 菜系选择 -->
+        <div class="mb-3 pb-3 border-b-2 border-gray-100">
+          <div class="text-xs text-gray-600 mb-2">选择菜系：</div>
+          <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              v-for="cuisine in cuisineOptions"
+              :key="cuisine.id"
+              @click="selectedCuisine = cuisine.id"
+              :class="[
+                'px-3 py-1.5 rounded-full text-xs font-medium border-2 whitespace-nowrap transition-all flex-shrink-0',
+                selectedCuisine === cuisine.id
+                  ? 'bg-black text-white border-black shadow-brutal-sm'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:scale-95'
+              ]"
+            >
+              <span class="mr-1">{{ cuisine.emoji }}</span>
+              {{ cuisine.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 拍照识别按钮（简化版） -->
+        <button
+          @click="router.push('/camera')"
+          class="w-full py-2.5 mb-3 bg-white text-gray-700 font-medium rounded-lg
+                 border-2 border-gray-300 hover:border-gray-400 active:scale-95 transition-all
+                 flex items-center justify-center gap-2"
+        >
+          <span class="text-lg">📷</span>
+          <span class="text-sm">拍照识别食材</span>
+        </button>
+
         <!-- 生成按钮 -->
         <button
           @click="handleGenerateWithIngredients"
           :disabled="selectedIngredients.length === 0"
-          class="w-full py-4 bg-gradient-to-r from-yellow-400 to-pink-400 text-white font-bold rounded-xl
+          class="w-full py-3.5 bg-gradient-to-r from-yellow-400 to-pink-400 text-white font-bold rounded-xl
                  border-2 border-black shadow-brutal-lg
                  hover:shadow-brutal-md active:shadow-brutal-sm
                  active:translate-x-[2px] active:translate-y-[2px]
                  transition-all duration-200
                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-brutal-lg"
         >
-          <span v-if="selectedIngredients.length === 0">请先添加食材</span>
-          <span v-else>✨ 开始生成菜谱（{{ selectedIngredients.length }}种食材）</span>
+          <span v-if="selectedIngredients.length === 0" class="text-sm">请先添加食材</span>
+          <span v-else class="text-sm">✨ 开始生成菜谱（{{ selectedIngredients.length }}种食材）</span>
         </button>
       </div>
     </div>
@@ -327,38 +434,25 @@ const welcomeMessage = computed(() => {
       </div>
     </div>
 
-    <!-- 食材识别入口 (折叠) -->
-    <div v-if="!hasResults && !generating" class="px-4 py-6">
-      <details class="card-brutal overflow-hidden">
-        <summary class="p-4 cursor-pointer font-medium flex items-center justify-between hover:bg-gray-50">
-          <span class="flex items-center gap-2">
-            <span class="text-2xl">📷</span>
-            <span>拍照识别食材</span>
-          </span>
-          <span class="text-gray-400">▼</span>
-        </summary>
-        <div class="p-4 border-t-2 border-gray-200 bg-gray-50">
-          <p class="text-sm text-gray-600 mb-3">
-            上传冰箱照片,AI 识别食材,智能推荐菜谱
-          </p>
-          <button
-            @click="router.push('/camera')"
-            class="btn-secondary w-full"
-          >
-            打开相机
-          </button>
-        </div>
-      </details>
-    </div>
-
     <!-- 高级选项 (wizard模式入口) -->
-    <div v-if="!hasResults && !generating" class="px-4 pb-6">
+    <div v-if="!hasResults && !generating" class="px-4 pb-4">
       <button
         @click="goToAdvancedMode"
-        class="w-full text-sm text-gray-500 hover:text-gray-700 underline py-2"
+        class="w-full text-xs text-gray-500 hover:text-gray-700 underline py-2"
       >
         使用高级模式 (3步精确配置) →
       </button>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 隐藏滚动条但保留滚动功能 */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
