@@ -14,13 +14,55 @@
             <!-- 步骤1: 菜品配置 -->
             <div class="mb-4">
                 <div class="card-brutal p-4 bg-white">
-                    <h2 class="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <span class="text-xl">🥘</span>
-                        <span>您的拿手菜（可选）</span>
-                    </h2>
+                    <!-- 总共要做几道菜 -->
+                    <div class="mb-4">
+                        <h2 class="text-base font-bold text-gray-800 mb-2 flex items-center gap-2">
+                            <span class="text-xl">🍽️</span>
+                            <span>总共要做几道菜？</span>
+                        </h2>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex gap-2">
+                                <button
+                                    v-for="count in [4, 6, 8, 10]"
+                                    :key="count"
+                                    @click="config.dishCount = count"
+                                    :class="[
+                                        'px-3 py-1.5 rounded-lg font-medium border-2 border-black transition-all text-sm',
+                                        config.dishCount === count
+                                            ? 'bg-black text-white shadow-brutal-sm'
+                                            : 'bg-white text-gray-700 hover:bg-gray-50 active:scale-95'
+                                    ]"
+                                >
+                                    {{ count }}道
+                                </button>
+                            </div>
+                            <div class="h-4 w-px bg-gray-300"></div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">自定义</span>
+                                <input
+                                    v-model.number="config.dishCount"
+                                    @input="validateDishCount"
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    class="w-14 px-2 py-1 text-center border-2 border-black rounded-lg font-medium text-sm
+                                           focus:outline-none focus:border-yellow-400 transition-all"
+                                />
+                                <span class="text-sm text-gray-600">道</span>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- 拿手菜输入 -->
-                    <div class="mb-3">
+                    <div class="pt-4 border-t-2 border-gray-100">
+                        <h3 class="text-sm font-bold text-gray-700 mb-1 flex items-center gap-1">
+                            <span>🥘</span>
+                            <span>您的拿手菜（可选）</span>
+                        </h3>
+                        <p class="text-xs text-gray-500 mb-3">
+                            💡 AI会根据您的拿手菜，智能搭配其他菜品，凑满总数
+                        </p>
+
                         <div v-if="config.customDishes.length > 0" class="mb-3">
                             <div class="flex flex-wrap gap-2">
                                 <div
@@ -58,45 +100,6 @@
                             <span>💡 可添加0-3道您擅长的菜</span>
                             <span>{{ config.customDishes.length }}/3</span>
                         </div>
-                    </div>
-
-                    <!-- 总共要做几道菜 -->
-                    <div class="pt-3 border-t-2 border-gray-100">
-                        <h3 class="text-sm font-bold text-gray-700 mb-2">🍽️ 总共要做几道菜？</h3>
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <div class="flex gap-2">
-                                <button
-                                    v-for="count in [4, 6, 8, 10]"
-                                    :key="count"
-                                    @click="config.dishCount = count"
-                                    :class="[
-                                        'px-3 py-1.5 rounded-lg font-medium border-2 border-black transition-all text-sm',
-                                        config.dishCount === count
-                                            ? 'bg-black text-white shadow-brutal-sm'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50 active:scale-95'
-                                    ]"
-                                >
-                                    {{ count }}道
-                                </button>
-                            </div>
-                            <div class="h-4 w-px bg-gray-300"></div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-gray-600">自定义</span>
-                                <input
-                                    v-model.number="config.dishCount"
-                                    @input="validateDishCount"
-                                    type="number"
-                                    min="1"
-                                    max="20"
-                                    class="w-14 px-2 py-1 text-center border-2 border-black rounded-lg font-medium text-sm
-                                           focus:outline-none focus:border-yellow-400 transition-all"
-                                />
-                                <span class="text-sm text-gray-600">道</span>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">
-                            💡 AI会根据您的拿手菜，智能搭配其他菜品，凑满总数
-                        </p>
                     </div>
                 </div>
             </div>
