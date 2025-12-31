@@ -1,7 +1,7 @@
 {
-  "name": "一饭封神 - AI美食助手",
-  "short_name": "一饭封神",
-  "description": "AI驱动的智能菜谱生成器，让每一餐都成为封神之作",
+  "name": "吃好饭 - AI智能菜谱",
+  "short_name": "吃好饭",
+  "description": "AI智能菜谱生成平台，让烹饪变得简单有趣",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbbf24",
