@@ -1,465 +1,261 @@
-<template>
-  <div class="home-wizard min-h-screen bg-gradient-to-br from-yellow-50 to-pink-50 pb-20">
-    <!-- Mobile NavBar -->
-    <NavBar
-      :title="wizardTitle"
-      :show-back="!wizard.isFirstStep.value"
-      @back="wizard.goPrev()"
-    >
-      <template #right>
-        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full border border-gray-200">
-          {{ wizard.currentStep.value + 1 }}/{{ steps.length }}
-        </span>
-      </template>
-    </NavBar>
-
-    <!-- Progress Bar (below NavBar) -->
-    <div class="fixed top-14 left-0 right-0 z-40 bg-gray-100 h-1 mt-[env(safe-area-inset-top)]">
-      <div
-        class="h-full bg-gradient-to-r from-yellow-400 to-pink-400 transition-all duration-300"
-        :style="{ width: `${wizard.progress.value}%` }"
-      ></div>
-    </div>
-
-    <!-- Step content -->
-    <div class="pt-8 px-0 md:px-4 max-w-4xl mx-auto min-h-[calc(100vh-140px)] flex flex-col justify-center">
-      <Transition name="slide-fade" mode="out-in">
-        <component
-          :is="currentStepComponent"
-          :key="wizard.currentStep.value"
-          v-model="formData"
-        />
-      </Transition>
-    </div>
-
-    <!-- Bottom action buttons - fixed for mobile -->
-    <div class="fixed bottom-20 md:bottom-4 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-white/90 via-white/80 to-transparent z-30 pt-6">
-      <div class="max-w-4xl mx-auto">
-        <button
-          v-if="!wizard.isLastStep.value"
-          @click="handleNext"
-          :disabled="!canProceed"
-          class="w-full py-4 text-lg font-bold rounded-xl border-2 border-black transition-all active:scale-95 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
-          :class="canProceed
-            ? 'bg-yellow-400 text-black'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none border-gray-300'"
-        >
-          下一步 →
-        </button>
-        <button
-          v-else
-          @click="generateRecipes"
-          :disabled="generating"
-          class="w-full py-4 text-lg font-bold bg-pink-500 text-white rounded-xl border-2 border-black active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
-        >
-          <span class="flex items-center gap-2 justify-center">
-            <template v-if="generating">
-              <div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-              <span>生成中...</span>
-            </template>
-            <template v-else>
-              <span class="text-xl">🎯</span>
-              <span>开始生成菜谱</span>
-            </template>
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Results section (shown after generation starts) -->
-    <div v-if="showResults" ref="resultsSection" class="mt-8 px-4 pb-24 max-w-6xl mx-auto">
-      <div class="bg-dark-800 text-white px-4 py-2 rounded-t-lg border-2 border-black border-b-0 inline-block">
-        <span class="font-bold">生成结果</span>
-      </div>
-      <div class="bg-white border-2 border-black rounded-lg rounded-tl-none p-4 md:p-6">
-        <!-- Loading state with cuisine slots -->
-        <div v-if="generating || cuisineSlots.length > 0">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div
-              v-for="(cuisineInfo, index) in cuisineSlots"
-              :key="cuisineInfo.id"
-              class="border-2 border-black rounded-lg overflow-hidden"
-              :class="cuisineInfo.recipe ? 'animate-fade-in-up' : ''"
-              :style="cuisineInfo.recipe ? { animationDelay: `${index * 0.2}s` } : {}"
-            >
-              <!-- Recipe card (if generated) -->
-              <RecipeCard v-if="cuisineInfo.recipe" :recipe="cuisineInfo.recipe" />
-
-              <!-- Error state -->
-              <div v-else-if="cuisineInfo.error" class="bg-white error-card">
-                <div class="bg-gradient-to-r from-red-400 to-orange-400 text-white p-4 md:p-6 border-b-2 border-black">
-                  <h3 class="text-lg font-bold mb-1 flex items-center gap-2">
-                    <span class="animate-bounce">😅</span>
-                    {{ cuisineInfo.name }}不会这道菜
-                  </h3>
-                  <div class="flex items-center gap-2 text-sm">
-                    <span class="bg-white/20 px-2 py-1 rounded text-xs">{{ cuisineInfo.name }}</span>
-                    <span>技能点不够</span>
-                  </div>
-                </div>
-                <div class="p-4 md:p-6 text-center">
-                  <p class="text-gray-600 text-sm mb-4">大师表示这个组合有点难度...</p>
-                  <button
-                    @click="retryFailedCuisine(cuisineInfo)"
-                    class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg font-medium text-sm border-2 border-black transition-all"
-                  >
-                    🔄 再试一次
-                  </button>
-                </div>
-              </div>
-
-              <!-- Loading state -->
-              <div v-else class="bg-white loading-card">
-                <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white p-4 md:p-6 border-b-2 border-black">
-                  <h3 class="text-lg font-bold mb-1">
-                    <span class="animate-pulse">👨‍🍳</span>
-                    {{ cuisineInfo.name }}创作中...
-                  </h3>
-                  <div class="text-sm">
-                    <span class="animate-spin">⏱️</span>
-                    预计10-20秒
-                  </div>
-                </div>
-                <div class="p-4 md:p-6">
-                  <div class="text-center py-6 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-lg border-2 border-dashed border-orange-200">
-                    <div class="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p class="text-gray-600 text-sm mb-3">{{ cuisineInfo.loadingText || '正在创作中...' }}</p>
-                    <div class="max-w-xs mx-auto">
-                      <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
-                        <div
-                          class="bg-gradient-to-r from-orange-400 to-yellow-500 h-3 rounded-full transition-all duration-1000"
-                          :style="{ width: cuisineInfo.progress + '%' }"
-                        ></div>
-                      </div>
-                      <p class="text-xs text-gray-500 mt-2">{{ Math.round(cuisineInfo.progress) }}% 完成</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty state -->
-        <div v-else-if="recipes.length === 0 && !errorMessage" class="text-center py-12">
-          <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span class="text-gray-400 text-2xl">⭐</span>
-          </div>
-          <h3 class="text-xl font-bold text-gray-400 mb-2">准备开始生成...</h3>
-          <p class="text-gray-500">完成配置后点击生成按钮</p>
-        </div>
-
-        <!-- Error state -->
-        <div v-else-if="errorMessage" class="text-center py-12">
-          <div class="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span class="text-red-500 text-2xl">⚠️</span>
-          </div>
-          <h3 class="text-xl font-bold text-red-600 mb-2">生成失败</h3>
-          <p class="text-red-500 mb-4">{{ errorMessage }}</p>
-          <button
-            @click="generateRecipes"
-            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium border-2 border-black transition-all"
-          >
-            🔄 重新生成
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useWizard } from '@/composables/useWizard'
-import NavBar from '@/components/NavBar.vue'
-import StepIngredients from './wizard-steps/StepIngredients.vue'
-import StepCuisine from './wizard-steps/StepCuisine.vue'
-import StepConfirm from './wizard-steps/StepConfirm.vue'
+import { useRouter } from 'vue-router'
+import SearchHeader from '@/components/SearchHeader.vue'
+import FilterChips from '@/components/FilterChips.vue'
+import SmartSceneCards, { type SceneCard } from '@/components/SmartSceneCards.vue'
 import RecipeCard from '@/components/RecipeCard.vue'
-import { cuisines as allCuisines } from '@/config/cuisines'
-import { generateCustomRecipe, generateMultipleRecipesStream, generateRecipe } from '@/services/aiService'
-import type { Recipe } from '@/types'
+import { generateRecipe } from '@/services/aiService'
+import { cuisines } from '@/config/cuisines'
+import type { Recipe, CuisineType } from '@/types'
 
-// Wizard steps definition
-const steps = [
-  {
-    title: '选择食材',
-    icon: '📋',
-    validate: () => formData.value.ingredients.length > 0
-  },
-  {
-    title: '选择菜系',
-    icon: '👨‍🍳'
-  },
-  {
-    title: '确认生成',
-    icon: '✨'
-  }
-]
+const router = useRouter()
 
-const wizard = useWizard(steps)
-
-// Form data
-const formData = ref({
-  ingredients: [] as string[],
-  cuisine: '',
-  customRequirements: '',
-  selectedCuisines: [] as string[]
-})
-
-// Generation state
+// 状态管理
 const generating = ref(false)
-const showResults = ref(false)
 const recipes = ref<Recipe[]>([])
+const activeFilters = ref<string[]>([])
 const errorMessage = ref('')
-const resultsSection = ref<HTMLElement | null>(null)
 
-// Cuisine slots for streaming generation
-interface CuisineSlot {
-  id: string
-  name: string
-  recipe?: Recipe
-  loadingText: string
-  progress: number
-  error?: boolean
-  errorMessage?: string
-}
-const cuisineSlots = ref<CuisineSlot[]>([])
+// 当前选中的场景
+const currentScene = ref<SceneCard | null>(null)
 
-const wizardTitle = computed(() => {
-  return `${wizard.currentStepData.value.icon} ${wizard.currentStepData.value.title}`
-})
-
-// Current step component
-const currentStepComponent = computed(() => {
-  const components = [StepIngredients, StepCuisine, StepConfirm]
-  return components[wizard.currentStep.value]
-})
-
-// Can proceed to next step
-const canProceed = computed(() => {
-  const step = steps[wizard.currentStep.value]
-  return !step.validate || step.validate()
-})
-
-// Handle next step
-const handleNext = () => {
-  wizard.goNext()
+// 处理筛选器变化
+const handleFilterChange = (filters: string[]) => {
+  activeFilters.value = filters
+  console.log('Active filters:', filters)
+  // TODO: 根据筛选条件更新推荐或重新生成菜谱
 }
 
-// Generate recipes
-const generateRecipes = async () => {
-  if (formData.value.ingredients.length === 0) {
-    return
-  }
-
-  // Reset state
+// 处理场景卡片点击 - 一键生成菜谱
+const handleGenerateWithScene = async (scene: SceneCard) => {
+  currentScene.value = scene
   generating.value = true
-  showResults.value = true
-  recipes.value = []
-  cuisineSlots.value = []
   errorMessage.value = ''
 
-  // Scroll to results
-  setTimeout(() => {
-    if (resultsSection.value) {
-      resultsSection.value.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      })
-    }
-  }, 100)
-
   try {
-    if (formData.value.customRequirements.trim()) {
-      // Custom requirements generation
-      cuisineSlots.value = [
-        {
-          id: 'custom',
-          name: '自定义大师',
-          loadingText: '正在根据您的要求创作...',
-          progress: 0
-        }
-      ]
+    // 根据场景ID选择对应的菜系
+    let cuisineType: CuisineType = cuisines.find((c: CuisineType) => c.id === 'su') || cuisines[0]
 
-      const progressInterval = setInterval(() => {
-        if (cuisineSlots.value[0] && !cuisineSlots.value[0].recipe) {
-          cuisineSlots.value[0].progress = Math.min(cuisineSlots.value[0].progress + Math.random() * 15, 90)
-        }
-      }, 500)
-
-      const customRecipe = await generateCustomRecipe(formData.value.ingredients, formData.value.customRequirements.trim())
-
-      if (cuisineSlots.value[0]) {
-        cuisineSlots.value[0].recipe = customRecipe
-        cuisineSlots.value[0].progress = 100
-        cuisineSlots.value[0].loadingText = '创作完成！'
-      }
-      recipes.value = [customRecipe]
-      generating.value = false
-      clearInterval(progressInterval)
-    } else {
-      // Cuisine-based generation
-      let selectedCuisineObjects = allCuisines.filter(c => formData.value.selectedCuisines.includes(c.id))
-
-      if (selectedCuisineObjects.length === 0) {
-        // Random selection
-        const shuffled = [...allCuisines].sort(() => 0.5 - Math.random())
-        selectedCuisineObjects = shuffled.slice(0, 2)
-      }
-
-      // Initialize cuisine slots
-      cuisineSlots.value = selectedCuisineObjects.map(cuisine => ({
-        id: cuisine.id,
-        name: cuisine.name,
-        loadingText: `${cuisine.name}正在精心创作...`,
-        progress: 0
-      }))
-
-      // Start progress animations
-      const progressIntervals: NodeJS.Timeout[] = []
-      cuisineSlots.value.forEach((slot, index) => {
-        const interval = setInterval(() => {
-          if (!slot.recipe && !slot.error) {
-            slot.progress = Math.min(slot.progress + Math.random() * 10, 85)
-            const texts = [`${slot.name}正在挑选食材...`, `${slot.name}正在调配秘制酱料...`, `${slot.name}正在掌控火候...`]
-            slot.loadingText = texts[Math.floor(Math.random() * texts.length)]
-          }
-        }, 800 + index * 200)
-        progressIntervals.push(interval)
-      })
-
-      // Stream generation
-      await generateMultipleRecipesStream(
-        formData.value.ingredients,
-        selectedCuisineObjects,
-        (recipe: Recipe, index: number, total: number) => {
-          const targetSlot = cuisineSlots.value.find(slot => selectedCuisineObjects[index] && slot.id === selectedCuisineObjects[index].id)
-
-          if (targetSlot) {
-            targetSlot.recipe = recipe
-            targetSlot.progress = 100
-            targetSlot.loadingText = '创作完成！'
-          }
-
-          recipes.value.push(recipe)
-
-          const completedCount = recipes.value.length + cuisineSlots.value.filter(slot => slot.error).length
-          if (completedCount === total) {
-            generating.value = false
-            progressIntervals.forEach(interval => clearInterval(interval))
-          }
-        },
-        (error: Error, index: number, _cuisine, total: number) => {
-          const targetSlot = cuisineSlots.value.find(slot => selectedCuisineObjects[index] && slot.id === selectedCuisineObjects[index].id)
-
-          if (targetSlot) {
-            targetSlot.error = true
-            targetSlot.errorMessage = error.message
-            targetSlot.progress = 0
-            targetSlot.loadingText = '生成失败'
-          }
-
-          const completedCount = recipes.value.length + cuisineSlots.value.filter(slot => slot.error).length
-          if (completedCount === total) {
-            generating.value = false
-            progressIntervals.forEach(interval => clearInterval(interval))
-          }
-        }
-      )
-
-      progressIntervals.forEach(interval => clearInterval(interval))
+    // 根据场景调整菜系选择
+    if (scene.id.includes('quick') || scene.id.includes('breakfast')) {
+      cuisineType = cuisines.find((c: CuisineType) => c.id === 'su') || cuisineType
+    } else if (scene.id.includes('party') || scene.id.includes('special')) {
+      cuisineType = cuisines.find((c: CuisineType) => c.id === 'fusion') || cuisineType
+    } else if (scene.id.includes('healthy') || scene.id.includes('light')) {
+      cuisineType = cuisines.find((c: CuisineType) => c.id === 'su') || cuisineType
     }
+
+    // 构建自定义提示词
+    let customPrompt = `场景：${scene.name} - ${scene.description}`
+
+    // 添加筛选条件到提示词
+    if (activeFilters.value.length > 0) {
+      customPrompt += `\n要求：${activeFilters.value.join('、')}`
+    }
+
+    // 添加场景标签到提示词
+    if (scene.tags && scene.tags.length > 0) {
+      customPrompt += `\n特点：${scene.tags.join('、')}`
+    }
+
+    // 调用AI生成菜谱
+    const recipe = await generateRecipe(
+      scene.ingredients || [],
+      cuisineType,
+      customPrompt
+    )
+
+    // 添加场景信息到菜谱
+    recipe.cuisine = cuisineType.name
+
+    // 更新菜谱列表
+    recipes.value = [recipe]
+
+    // 滚动到结果
+    setTimeout(() => {
+      const resultsEl = document.getElementById('recipe-results')
+      if (resultsEl) {
+        resultsEl.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 100)
   } catch (error) {
     console.error('生成菜谱失败:', error)
-    errorMessage.value = error instanceof Error ? error.message : 'AI生成菜谱失败，请稍后重试'
+    errorMessage.value = error instanceof Error ? error.message : '生成菜谱失败,请重试'
+  } finally {
     generating.value = false
   }
 }
 
-// Retry failed cuisine
-const retryFailedCuisine = async (failedSlot: CuisineSlot) => {
-  failedSlot.error = false
-  failedSlot.errorMessage = undefined
-  failedSlot.progress = 0
-  failedSlot.loadingText = '大师重新思考中...'
-
-  const cuisine = allCuisines.find(c => c.id === failedSlot.id)
-  if (!cuisine) return
-
-  const progressInterval = setInterval(() => {
-    if (!failedSlot.recipe && !failedSlot.error) {
-      failedSlot.progress = Math.min(failedSlot.progress + Math.random() * 10, 85)
-    }
-  }, 500)
-
-  try {
-    const delay = 1000 + Math.random() * 2000
-    await new Promise(resolve => setTimeout(resolve, delay))
-
-    const recipe = formData.value.customRequirements.trim()
-      ? await generateCustomRecipe(formData.value.ingredients, formData.value.customRequirements.trim())
-      : await generateRecipe(formData.value.ingredients, cuisine, formData.value.customRequirements.trim() || undefined)
-
-    failedSlot.recipe = recipe
-    failedSlot.progress = 100
-    failedSlot.loadingText = '重新创作完成！'
-    recipes.value.push(recipe)
-    clearInterval(progressInterval)
-  } catch (error) {
-    console.error(`重试${cuisine.name}菜谱失败:`, error)
-    failedSlot.error = true
-    failedSlot.errorMessage = error instanceof Error ? error.message : `${cuisine.name}还是不会这道菜`
-    failedSlot.progress = 0
-    failedSlot.loadingText = '重试失败'
-    clearInterval(progressInterval)
+// 重新生成
+const handleRegenerate = () => {
+  if (currentScene.value) {
+    handleGenerateWithScene(currentScene.value)
   }
 }
+
+// 清除结果
+const clearResults = () => {
+  recipes.value = []
+  currentScene.value = null
+  errorMessage.value = ''
+}
+
+// 跳转到高级模式(旧版wizard)
+const goToAdvancedMode = () => {
+  router.push('/home-wizard')
+}
+
+// 计算是否显示结果区域
+const hasResults = computed(() => recipes.value.length > 0)
+
+// 页面加载时的欢迎提示
+const welcomeMessage = computed(() => {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 9) return '早上好! 开始今天的美味旅程吧 ☀️'
+  if (hour >= 9 && hour < 12) return '上午好! 准备做点什么好吃的? 🍳'
+  if (hour >= 12 && hour < 14) return '午餐时间! 看看有什么想吃的 🍱'
+  if (hour >= 14 && hour < 17) return '下午好! 为晚餐做点准备吧 ☕'
+  if (hour >= 17 && hour < 20) return '晚上好! 今天吃什么呢? 🌆'
+  return '夜深了,来点夜宵如何? 🌙'
+})
 </script>
 
-<style scoped>
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+<template>
+  <div class="min-h-screen bg-gradient-to-br from-yellow-50 to-pink-50 pb-20">
+    <!-- 搜索头部 -->
+    <SearchHeader />
 
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px rgba(249, 115, 22, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.6);
-  }
-}
+    <!-- 快速筛选 -->
+    <FilterChips @change="handleFilterChange" />
 
-.animate-fade-in-up {
-  animation: fade-in-up 0.6s ease-out forwards;
-  opacity: 0;
-}
+    <!-- 欢迎消息 -->
+    <div v-if="!hasResults && !generating" class="px-4 pt-6 pb-4">
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">
+        {{ welcomeMessage }}
+      </h1>
+      <p class="text-sm text-gray-600">
+        点击下方卡片,AI 为你即刻生成专属菜谱
+      </p>
+    </div>
 
-.loading-card {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+    <!-- 智能推荐卡片 - 核心入口 -->
+    <SmartSceneCards
+      v-if="!generating"
+      @generate="handleGenerateWithScene"
+    />
 
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease;
-}
+    <!-- 加载状态 -->
+    <div v-if="generating" class="px-4 py-12">
+      <div class="card-brutal p-8 text-center">
+        <div class="animate-spin text-6xl mb-4">🍳</div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">AI 大厨正在烹饪...</h3>
+        <p class="text-sm text-gray-600">
+          为 "{{ currentScene?.name }}" 生成专属菜谱
+        </p>
+      </div>
+    </div>
 
-.slide-fade-enter-from {
-  transform: translateX(30px);
-  opacity: 0;
-}
+    <!-- 错误提示 -->
+    <div v-if="errorMessage && !generating" class="px-4 py-4">
+      <div class="bg-red-50 border-2 border-red-500 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div class="flex-1">
+            <h4 class="font-bold text-red-800 mb-1">生成失败</h4>
+            <p class="text-sm text-red-600">{{ errorMessage }}</p>
+          </div>
+        </div>
+        <button
+          @click="handleRegenerate"
+          class="mt-3 btn-secondary w-full"
+        >
+          重试
+        </button>
+      </div>
+    </div>
 
-.slide-fade-leave-to {
-  transform: translateX(-30px);
-  opacity: 0;
-}
-</style>
+    <!-- 结果展示区域 -->
+    <div v-if="hasResults && !generating" id="recipe-results" class="px-4 py-6">
+      <!-- 结果头部 -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-800">
+          为你推荐 - {{ currentScene?.name }}
+        </h2>
+        <div class="flex gap-2">
+          <button
+            @click="handleRegenerate"
+            class="text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            换一个
+          </button>
+          <button
+            @click="clearResults"
+            class="text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            清除
+          </button>
+        </div>
+      </div>
+
+      <!-- 菜谱卡片 -->
+      <div class="space-y-4">
+        <RecipeCard
+          v-for="recipe in recipes"
+          :key="recipe.id"
+          :recipe="recipe"
+        />
+      </div>
+
+      <!-- 更多操作 -->
+      <div class="mt-6 flex gap-3">
+        <button
+          @click="handleRegenerate"
+          class="flex-1 btn-secondary"
+        >
+          🔄 再来一个
+        </button>
+        <button
+          @click="clearResults"
+          class="flex-1 btn-secondary"
+        >
+          ✨ 重新选择
+        </button>
+      </div>
+    </div>
+
+    <!-- 食材识别入口 (折叠) -->
+    <div v-if="!hasResults && !generating" class="px-4 py-6">
+      <details class="card-brutal overflow-hidden">
+        <summary class="p-4 cursor-pointer font-medium flex items-center justify-between hover:bg-gray-50">
+          <span class="flex items-center gap-2">
+            <span class="text-2xl">📷</span>
+            <span>拍照识别食材</span>
+          </span>
+          <span class="text-gray-400">▼</span>
+        </summary>
+        <div class="p-4 border-t-2 border-gray-200 bg-gray-50">
+          <p class="text-sm text-gray-600 mb-3">
+            上传冰箱照片,AI 识别食材,智能推荐菜谱
+          </p>
+          <button
+            @click="router.push('/camera')"
+            class="btn-secondary w-full"
+          >
+            打开相机
+          </button>
+        </div>
+      </details>
+    </div>
+
+    <!-- 高级选项 (wizard模式入口) -->
+    <div v-if="!hasResults && !generating" class="px-4 pb-6">
+      <button
+        @click="goToAdvancedMode"
+        class="w-full text-sm text-gray-500 hover:text-gray-700 underline py-2"
+      >
+        使用高级模式 (3步精确配置) →
+      </button>
+    </div>
+  </div>
+</template>

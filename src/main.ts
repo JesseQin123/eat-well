@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import Home from './views/Home.vue'
+import HomeOld from './views/HomeOld.vue'
 import About from './views/About.vue'
 import TodayEat from './views/TodayEat.vue'
 import TableDesign from './views/TableDesign.vue'
@@ -17,6 +18,7 @@ import './style.css'
 
 const routes = [
     { path: '/', component: Home, meta: { transition: 'fade' } },
+    { path: '/home-wizard', component: HomeOld, meta: { transition: 'fade' } },
     { path: '/about', component: About, meta: { transition: 'fade' } },
     { path: '/today-eat', component: TodayEat, meta: { transition: 'slide-left' } },
     { path: '/table-design', component: TableDesign, meta: { transition: 'slide-left' } },
