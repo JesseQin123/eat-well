@@ -25,9 +25,9 @@ import TabItem from './TabItem.vue'
 const route = useRoute()
 
 const navItems = [
-  { icon: '🏠', label: '今天吃啥', to: '/' },
+  { icon: '🥘', label: '今天吃啥', to: '/' },
   { icon: '🔮', label: '玄学厨房', to: '/fortune-cooking' },
-  { icon: '🍽️', label: '一桌菜', to: '/table-design' },
+  { icon: '🍽️', label: '凑一桌菜', to: '/table-design' },
   { icon: '❤️', label: '我的收藏', to: '/favorites' }
 ]
 
