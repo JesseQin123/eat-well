@@ -1,7 +1,14 @@
 <template>
-    <div class="min-h-screen bg-yellow-400 px-2 md:px-4 py-6">
-        <!-- 全局导航 -->
-        <GlobalNavigation />
+    <div class="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 px-2 md:px-4 py-6 pb-20">
+        <!-- 简化的页面标题 -->
+        <div class="max-w-2xl mx-auto px-4 pt-6 pb-4 md:pt-0">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                一桌菜 🍽️
+            </h1>
+            <p class="text-sm text-gray-600">
+                让每顿饭，都有剧本
+            </p>
+        </div>
 
         <div class="max-w-7xl mx-auto">
             <!-- 步骤1和2: 左右布局 -->
@@ -435,9 +442,6 @@
             </div>
         </div>
 
-        <!-- 底部 -->
-        <GlobalFooter />
-
         <!-- 菜谱弹窗 -->
         <Teleport to="body">
         <div v-if="selectedRecipe" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 modal-overlay" @click="closeRecipeModal">
@@ -475,8 +479,6 @@
 import { ref, reactive, Teleport, Transition, onMounted, onUnmounted } from 'vue'
 import type { Recipe } from '@/types'
 import RecipeCard from '@/components/RecipeCard.vue'
-import GlobalNavigation from '@/components/GlobalNavigation.vue'
-import GlobalFooter from '@/components/GlobalFooter.vue'
 import { generateTableMenu, generateDishRecipe } from '@/services/aiService'
 
 // 配置选项
