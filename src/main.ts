@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
+import { inject } from '@vercel/analytics'
 import App from './App.vue'
 import Home from './views/Home.vue'
 import HomeOld from './views/HomeOld.vue'
@@ -41,6 +42,9 @@ const app = createApp(App).use(router)
 
 // 在应用挂载前检查环境变量变化并自动刷新
 autoRefreshEnvSettings()
+
+// 初始化 Vercel Analytics
+inject()
 
 // 挂载应用
 app.mount('#app')
