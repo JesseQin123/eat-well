@@ -90,20 +90,15 @@ const handleGenerateWithIngredients = async () => {
     // 根据选择的菜系ID找到对应的菜系配置
     let cuisineType: CuisineType
 
-    if (selectedCuisine.value === 'home-cooking') {
-      // 家常菜使用默认配置
-      cuisineType = cuisines.find((c: CuisineType) => c.id === 'chuan') || cuisines[0]
-    } else {
-      // 使用选择的菜系
-      cuisineType = cuisines.find((c: CuisineType) => c.id === selectedCuisine.value) || cuisines[0]
-    }
+    // 直接根据选择的菜系ID找到对应配置（包括家常菜）
+    cuisineType = cuisines.find((c: CuisineType) => c.id === selectedCuisine.value) || cuisines[0]
 
     // 构建自定义提示词
     let customPrompt = `使用这些食材: ${selectedIngredients.value.join('、')}`
 
     // 添加菜系偏好
     if (selectedCuisine.value === 'home-cooking') {
-      customPrompt += '\n要求：家常风味，简单易做'
+      customPrompt += '\n要求：家常风味，简单易做，口味清淡，少油少盐少辣，注重食材本味'
     } else {
       const cuisineName = cuisineOptions.find(c => c.id === selectedCuisine.value)?.name
       customPrompt += `\n要求：${cuisineName}风味`

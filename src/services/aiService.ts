@@ -901,6 +901,7 @@ export const generateDishRecipeByName = async (dishName: string): Promise<Recipe
 2. 详细的制作步骤，每个步骤要包含具体的时间和火候
 3. 实用的烹饪技巧和注意事项
 4. 如果是地方菜，请说明其特色和来源
+5. 口味偏好：请偏向清淡口味，少油少盐少辣，注重食材本味和营养健康。如果菜名本身是辣菜（如麻婆豆腐），可以适当减轻辣度，或提供清淡版本的做法
 
 请按照以下JSON格式返回菜谱：
 {
